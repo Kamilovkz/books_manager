@@ -9,12 +9,7 @@ Before running the project, follow these steps:
 1. Create an `.env` file based on the provided `.envsample` file.
 
     ```env
-    # Database settings
-    DATABASE_URL=postgres://db_user:db_password@db_host:db_port/db_name
-
-    # RabbitMQ settings
-    RABBITMQ_DEFAULT_USER=guest
-    RABBITMQ_DEFAULT_PASS=guest
+    DJANGO_SECRET_KEY='django-insecure-5lph(eempk26oc1f$d!86w(feu!mbj!6%g665a^c2r)ce&r%+_'
     ```
 
 2. Build and run the project using Docker Compose:
@@ -50,6 +45,6 @@ To interact with the API, here are some basic commands:
 
 ## Email Verification
 
-Please note that email verification logic is not implemented in this project. You can adapt and implement this feature according to your requirements.
+Please note that email verification logic is not completely implemented in this project. But has some idea how to make it via MailGun.
 
 Happy reading!
