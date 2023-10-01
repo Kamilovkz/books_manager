@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Book Collection</title>
+    <style>
+        /* Style for the table */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        /* Style for table headers */
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+            padding: 8px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        /* Style for table data cells */
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* Style for even rows */
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>My Book Collection</h1>
+
+    <button id="refresh-button">Home</button> 
+    <button id="authorization-button">Authorization</button>
+    <label for="fromDate">From:</label>
+    <input type="date" id="fromDate">
+    <label for="toDate">To:</label>
+    <input type="date" id="toDate">
+    <button id="filter-button">Filter</button>
+    
+
+    <table id="book-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Publication Date</th>
+                <th>Description</th>
+                <th>Average Rating</th>
+                <th>Genre</th>
+                <th>Is Favorite</th>
+                <th>Edit</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Book data will be displayed here -->
+        </tbody>
+    </table>
+    
+
+    <script>
+        const authorizationButton = document.querySelector('#authorization-button');
+        authorizationButton.addEventListener('click', function () {
+            // Redirect to the login page
+            window.location.href = '/login/';
+        });
+        var accessToken = localStorage.getItem('accessToken');
+
+        // Add an event listener for the filter button
+        const filterButton = document.querySelector('#filter-button');
+        filterButton.addEventListener('click', function () {
+            const fromDate = document.querySelector('#fromDate').value;
+            const toDate = document.querySelector('#toDate').value;
+
+            // Check if both fromDate and toDate are provided
+            if (fromDate && toDate) {
+                // Clear the table before fetching and displaying filtered data
+                clearTable();
+
+                // Construct the API URL with date range parameters
+                const apiUrl = `http://localhost:8000/api/books/?from=${fromDate}&to=${toDate}`;
+                
+                // Fetch and display filtered data
+                fetchFilteredBooks(apiUrl);
+            } else {
+                // Handle the case where both dates are not provided
+                console.error('Please provide both From and To dates for filtering.');
+            }
+        });
+
+        async function fetchFilteredBooks(apiUrl) {
+            try {
+                if (!accessToken) {
+                    console.error('Access token not found.');
+                    return;
+                }
+
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + accessToken,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    const books = await response.json();
+                    displayBooks(books);
+                } else {
+                    console.error('Failed to fetch books.');
+                }
+            } catch (error) {
+                console.error('Error fetching books:', error);
+            }
+        }
+
+        // Modify the fetchBooks function to accept a custom API URL
+        async function fetchBooks(apiUrl) {
+            try {
+                if (!accessToken) {
+                    console.error('Access token not found.');
+                    return;
+                }
+
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + accessToken,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    const books = await response.json();
+                    displayBooks(books);
+                } else {
+                    console.error('Failed to fetch books.');
+                }
+            } catch (error) {
+                console.error('Error fetching books:', error);
+            }
+        }
+    
+        async function fetchBooks() {
+            try {
+                if (!accessToken) {
+                    console.error('Access token not found.');
+                    return;
+                }
+    
+                const response = await fetch('http://localhost:8000/api/books/', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + accessToken,
+                        'Content-Type': 'application/json',
+                    },
+                });
+    
+                if (response.ok) {
+                    const books = await response.json();
+                    displayBooks(books);
+                } else {
+                    console.error('Failed to fetch books.');
+                }
+            } catch (error) {
+                console.error('Error fetching books:', error);
+            }
+        }
+    
+        function displayBooks(books) {
+            const tableBody = document.querySelector('#book-table tbody');
+    
+            books.forEach(book => {
+                const row = tableBody.insertRow();
+                
+                // Add a button to add/remove the book from favorites
+                const favoriteButton = document.createElement('button');
+                favoriteButton.innerText = book.is_favorite ? 'Remove from Favorites' : 'Add to Favorites';
+                favoriteButton.addEventListener('click', function () {
+                    // Handle adding/removing the book from favorites here
+                    if (book.is_favorite) {
+                        // Make a DELETE request to remove the book from favorites
+                        fetch(`http://localhost:8000/api/books/favorite/`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': 'Bearer ' + accessToken,
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ book: book.id }),
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.message === 'Book removed from favorites') {
+                                // Update the button text and is_favorite status
+                                book.is_favorite = false;
+                                favoriteButton.innerText = 'Add to Favorites';
+
+                            } else {
+                                alert('Failed to remove book from favorites.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error removing book from favorites:', error);
+                        });
+                    } else {
+                        // Make a POST request to add the book to favorites
+                        fetch('http://localhost:8000/api/books/favorite/', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + accessToken,
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ book: book.id }),
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.message === 'Book added to favorites') {
+                                alert('Book added to favorites.');
+                                // Update the button text and is_favorite status
+                                book.is_favorite = true;
+                                favoriteButton.innerText = 'Remove from Favorites';
+                            } else {
+                                alert('Book successfully added into your favorite');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error adding book to favorites:', error);
+                        });
+                    }
+                });
+
+                // Update the book title link to include the book ID as a query parameter
+                row.innerHTML = `
+                    <td><a href="/details?book_id=${book.id}" class="book-title-link">${book.title}</a></td>
+                    <td>${book.author}</td>
+                    <td>${book.publication_date}</td>
+                    <td>${book.description}</td>
+                    <td>${book.average_rating}</td>
+                    <td>${book.genre}</td>
+                    <td>${book.is_favorite ? 'Yes' : 'No'}</td>
+                    <td></td>
+                `;
+                
+                // Add the favorite button to the last cell of the row
+                const buttonCell = row.cells[row.cells.length - 1];
+                buttonCell.appendChild(favoriteButton);
+            });
+        }
+
+        // Add an event listener for the book title links
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('book-title-link')) {
+                event.preventDefault(); // Prevent the default link behavior
+                const bookId = event.target.getAttribute('href').split('=')[1];
+                fetchBookDetails(bookId);
+            }
+        });
+
+        async function fetchBookDetails(bookId) {
+            try {
+                if (!accessToken) {
+                    console.error('Access token not found.');
+                    return;
+                }
+
+                const response = await fetch(`http://localhost:8000/api/books/?book_id=${bookId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + accessToken,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    const book = await response.json();
+                    displayBookDetails(book);
+                } else {
+                    console.error('Failed to fetch book details.');
+                }
+            } catch (error) {
+                console.error('Error fetching book details:', error);
+            }
+        }
+
+        function displayBookDetails(books) {
+            const tableBody = document.querySelector('#book-table tbody');
+
+            // Clear the table body
+            tableBody.innerHTML = '';
+
+            books.forEach(book => {
+                const row = tableBody.insertRow();
+                row.innerHTML = `
+                    <td>${book.title}</td>
+                    <td>${book.author}</td>
+                    <td>${book.publication_date}</td>
+                    <td>${book.description}</td>
+                    <td>${book.average_rating}</td>
+                    <td>${book.genre}</td>
+                    <td>${book.is_favorite ? 'Yes' : 'No'}</td>
+                    `;
+                });
+        }
+
+        const refreshButton = document.querySelector('#refresh-button');
+        refreshButton.addEventListener('click', function () {
+            const tableBody = document.querySelector('#book-table tbody');
+            tableBody.innerHTML = '';
+            fetchBooks();
+        });
+
+        function clearTable() {
+            const tableBody = document.querySelector('#book-table tbody');
+            tableBody.innerHTML = '';
+        }
+        
+        fetchBooks();
+    </script>
+</body>
+</html>

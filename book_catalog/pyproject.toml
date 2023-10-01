@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "books-manager"
+version = "0.1.0"
+description = ""
+authors = ["Kamilovkz <001kamilov@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+django = "^4.2.5"
+djangorestframework = "^3.14.0"
+python-decouple = "^3.8"
+djangorestframework-simplejwt = "^5.3.0"
+loguru = "^0.7.2"
+drf-yasg = "^1.21.7"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

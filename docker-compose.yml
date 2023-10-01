@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  
+  book_catalog:
+    build: 
+      context: ./book_catalog
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./book_catalog:/app
+    networks:
+      - book_catalog
+
+networks:
+  book_catalog:
+    driver: bridge
